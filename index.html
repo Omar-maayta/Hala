@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNAUTHORIZED ACCESS</title>
     <style>
-        /* --- GLOBAL & VARIABLES --- */
+        /* =============================================
+           VARIABLES & RESET
+        ============================================= */
         :root {
             --bg-dark: #09090b;
             --card-bg: #14141b;
@@ -19,124 +21,430 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body, html {
-            height: 100%; background-color: var(--bg-dark);
-            color: #f4f4f5; font-family: var(--font-sans);
+            height: 100%;
+            background-color: var(--bg-dark);
+            color: #f4f4f5;
+            font-family: var(--font-sans);
             overflow-x: hidden;
             transition: filter 0.5s, background-color 0.5s;
         }
 
-        /* --- STORY MEMORY MODES (Applied dynamically via JS) --- */
+        /* =============================================
+           STORY MEMORY MODES (applied via JS)
+        ============================================= */
         body.mode-violence { animation: screen-shake 4s infinite; }
         body.mode-violence .btn { border-color: rgba(255,51,85,0.4); }
+
         body.mode-civilized { font-family: 'Georgia', serif; }
         body.mode-civilized .btn { border-radius: 30px; box-shadow: 0 4px 10px rgba(255,255,255,0.05); }
-        body.mode-apathy .screen { transition-duration: 2s; /* Massive lag effect */ }
+
+        /* BUG FIX: Scoped apathy lag to only the transition-in of screens,
+           not globally, to avoid breaking navigation timing */
+        body.mode-apathy #phase3 { transition-duration: 2s; }
+
         body.mode-confused .btn-grid { transform: rotate(-3deg); }
         body.mode-confused h1 { transform: rotate(1deg); letter-spacing: 3px; }
-        
+
         @keyframes screen-shake {
             0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(2px, -2px); }
-            75% { transform: translate(-2px, 2px); }
+            50%  { transform: translate(2px, -2px); }
+            75%  { transform: translate(-2px, 2px); }
         }
 
-        /* --- SCREENS (Phases) --- */
+        /* =============================================
+           SCREENS / PHASES
+        ============================================= */
         .screen {
-            position: absolute; top: 0; left: 0;
-            width: 100vw; min-height: 100vh;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center; padding: 20px;
-            opacity: 0; visibility: hidden; z-index: 10;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 10;
             transition: opacity 0.5s ease, visibility 0.5s ease;
         }
         .screen.active { opacity: 1; visibility: visible; z-index: 20; }
-        #phase9 { position: relative; min-height: 100vh; justify-content: flex-start; padding-top: 60px; padding-bottom: 100px; overflow-y: auto; height: auto; }
 
-        /* --- TYPOGRAPHY & BUTTONS --- */
-        h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; }
-        p { font-size: 1.2rem; color: #a1a1aa; margin-bottom: 30px; max-width: 600px; line-height: 1.6; }
-        
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 600px; margin: 0 auto; transition: transform 0.5s; }
-        .btn {
-            padding: 16px 24px; font-size: 1rem; font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
-            background-color: var(--card-bg); color: #fff; cursor: pointer; transition: all 0.2s ease;
+        /* BUG FIX: phase9 needs position:relative (not absolute) so
+           it can scroll. Also removed conflicting height:auto vs min-height. */
+        #phase9 {
+            position: relative;
+            min-height: 100vh;
+            justify-content: flex-start;
+            padding-top: 60px;
+            padding-bottom: 100px;
+            overflow-y: auto;
         }
-        .btn:hover { background-color: #1e1e24; border-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
-        .btn-primary { background: linear-gradient(135deg, var(--accent-red), #cc1133); border: none; color: white; box-shadow: 0 4px 15px rgba(255, 51, 85, 0.3); padding: 16px 32px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        /* =============================================
+           TYPOGRAPHY & BUTTONS
+        ============================================= */
+        h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; }
+        p  { font-size: 1.2rem; color: #a1a1aa; margin-bottom: 30px; max-width: 600px; line-height: 1.6; }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            transition: transform 0.5s;
+        }
+        .btn {
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background-color: #1e1e24;
+            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-red), #cc1133);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 51, 85, 0.3);
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
         .btn-primary:hover { transform: scale(1.05); }
 
-        /* Phase 5 Responsive Reveal Typography */
-        .reveal-sub { font-size: clamp(1.5rem, 5vw, 2.5rem); color: var(--accent-gold); letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
-        .reveal-main { font-size: clamp(3.5rem, 15vw, 6rem); line-height: 1.1; background: linear-gradient(to right, #ff3355, #ff9a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; margin-bottom: 20px; font-weight: 900; letter-spacing: -2px; }
-
-        /* --- PHASE 1-3: TERMINAL / SECURITY VIBE --- */
-        .terminal-box { text-align: left; max-width: 600px; width: 100%; background: #000; padding: 30px; border: 1px solid #333; border-radius: 8px; font-family: var(--font-mono); }
-        .term-text { color: var(--accent-green); display: block; margin-bottom: 15px; font-size: 1.1rem; }
-        .progress-container { width: 100%; height: 25px; border: 1px solid #333; background: #111; margin-top: 20px; border-radius: 4px; overflow: hidden; position: relative; }
-        .progress-bar { height: 100%; width: 0%; background: var(--accent-red); transition: width 0.3s ease; }
-        .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: #fff; mix-blend-mode: difference; }
-
-        /* --- PHASE 4 & 6: CHAT BUBBLES & CHAOS --- */
-        .chat-bubble { background: var(--card-bg); border-left: 5px solid var(--accent-red); padding: 25px; border-radius: 12px; font-size: 1.4rem; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 700px; font-weight: bold; }
-        .sys-event-badge { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); padding: 5px 15px; border-radius: 50px; font-size: 0.9rem; font-weight: bold; letter-spacing: 2px; margin-bottom: 20px; display: inline-block; font-family: var(--font-mono); }
-        
-        .chaos-box { border: 2px dashed var(--accent-red); background: rgba(255,51,85,0.05); padding: 20px; border-radius: 12px; margin-top: 20px; animation: pulse-border 2s infinite; display: none; }
-        @keyframes pulse-border { 0%, 100% { border-color: rgba(255,51,85,0.3); } 50% { border-color: rgba(255,51,85,1); } }
-
-        /* Random Popups (Phase 6) */
-        .random-toast {
-            position: fixed; background: #000; border: 1px solid var(--accent-gold);
-            color: var(--accent-gold); padding: 10px 20px; border-radius: 8px;
-            font-family: var(--font-mono); font-size: 0.9rem; font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: none;
-            animation: popInOut 2.5s forwards; z-index: 50;
+        /* =============================================
+           PHASE 5: REVEAL TYPOGRAPHY
+        ============================================= */
+        .reveal-sub {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
         }
-        @keyframes popInOut { 0% { opacity: 0; transform: scale(0.8); } 20% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
+        .reveal-main {
+            font-size: clamp(3.5rem, 15vw, 6rem);
+            line-height: 1.1;
+            background: linear-gradient(to right, #ff3355, #ff9a00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            font-weight: 900;
+            letter-spacing: -2px;
+        }
 
-        /* --- PHASE 8: GLITCH TWIST --- */
-        .glitch-text { font-size: clamp(2rem, 8vw, 3.5rem); color: white; font-weight: 900; position: relative; margin-bottom: 20px; text-transform: uppercase; }
-        .glitch-text::before, .glitch-text::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .glitch-text::before { left: 3px; text-shadow: -2px 0 red; animation: glitch-anim 0.3s infinite linear alternate-reverse; background: var(--bg-dark); }
-        .glitch-text::after { left: -3px; text-shadow: -2px 0 blue; animation: glitch-anim2 0.2s infinite linear alternate-reverse; background: transparent; }
-        @keyframes glitch-anim { 0% { clip-path: inset(20% 0 80% 0); } 20% { clip-path: inset(60% 0 10% 0); } 40% { clip-path: inset(40% 0 50% 0); } 60% { clip-path: inset(80% 0 5% 0); } 80% { clip-path: inset(10% 0 70% 0); } 100% { clip-path: inset(30% 0 20% 0); } }
-        @keyframes glitch-anim2 { 0% { clip-path: inset(10% 0 60% 0); } 20% { clip-path: inset(80% 0 5% 0); } 40% { clip-path: inset(30% 0 20% 0); } 60% { clip-path: inset(70% 0 10% 0); } 80% { clip-path: inset(20% 0 50% 0); } 100% { clip-path: inset(50% 0 30% 0); } }
+        /* =============================================
+           PHASE 3: TERMINAL
+        ============================================= */
+        .terminal-box {
+            text-align: left;
+            max-width: 600px;
+            width: 100%;
+            background: #000;
+            padding: 30px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+        }
+        .term-text {
+            color: var(--accent-green);
+            display: block;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .progress-container {
+            width: 100%;
+            height: 25px;
+            border: 1px solid #333;
+            background: #111;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar  { height: 100%; width: 0%; background: var(--accent-red); transition: width 0.3s ease; }
+        .progress-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #fff;
+            mix-blend-mode: difference;
+        }
 
-        /* --- PHASE 9: GALLERY & CAKE --- */
-        .photo-gallery { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; margin-top: 40px; }
-        .polaroid { background: #fff; padding: 15px 15px 40px 15px; border-radius: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); transform: rotate(-3deg); transition: transform 0.3s ease; width: 250px; }
+        /* =============================================
+           PHASE 4 & 6: CHAT BUBBLES & CHAOS
+        ============================================= */
+        .chat-bubble {
+            background: var(--card-bg);
+            border-left: 5px solid var(--accent-red);
+            padding: 25px;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 700px;
+            font-weight: bold;
+        }
+        .sys-event-badge {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: inline-block;
+            font-family: var(--font-mono);
+        }
+        .chaos-box {
+            border: 2px dashed var(--accent-red);
+            background: rgba(255,51,85,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            animation: pulse-border 2s infinite;
+            display: none;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(255,51,85,0.3); }
+            50%       { border-color: rgba(255,51,85,1); }
+        }
+
+        /* Random Toasts (Phase 6) */
+        .random-toast {
+            position: fixed;
+            background: #000;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            pointer-events: none;
+            animation: popInOut 2.5s forwards;
+            z-index: 50;
+        }
+        @keyframes popInOut {
+            0%   { opacity: 0; transform: scale(0.8); }
+            20%  { opacity: 1; transform: scale(1); }
+            80%  { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* =============================================
+           PHASE 8: GLITCH TWIST
+        ============================================= */
+        .glitch-text {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            color: white;
+            font-weight: 900;
+            position: relative;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+        .glitch-text::before {
+            left: 3px;
+            text-shadow: -2px 0 red;
+            animation: glitch-anim 0.3s infinite linear alternate-reverse;
+            background: var(--bg-dark);
+        }
+        .glitch-text::after {
+            left: -3px;
+            text-shadow: -2px 0 blue;
+            animation: glitch-anim2 0.2s infinite linear alternate-reverse;
+            background: transparent;
+        }
+        @keyframes glitch-anim {
+            0%   { clip-path: inset(20% 0 80% 0); }
+            20%  { clip-path: inset(60% 0 10% 0); }
+            40%  { clip-path: inset(40% 0 50% 0); }
+            60%  { clip-path: inset(80% 0 5%  0); }
+            80%  { clip-path: inset(10% 0 70% 0); }
+            100% { clip-path: inset(30% 0 20% 0); }
+        }
+        @keyframes glitch-anim2 {
+            0%   { clip-path: inset(10% 0 60% 0); }
+            20%  { clip-path: inset(80% 0 5%  0); }
+            40%  { clip-path: inset(30% 0 20% 0); }
+            60%  { clip-path: inset(70% 0 10% 0); }
+            80%  { clip-path: inset(20% 0 50% 0); }
+            100% { clip-path: inset(50% 0 30% 0); }
+        }
+
+        /* =============================================
+           PHASE 9: GALLERY, CARD & CAKE
+        ============================================= */
+        .photo-gallery {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+            margin-top: 40px;
+        }
+        .polaroid {
+            background: #fff;
+            padding: 15px 15px 40px 15px;
+            border-radius: 4px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            transform: rotate(-3deg);
+            transition: transform 0.3s ease;
+            width: 250px;
+        }
         .polaroid:nth-child(2) { transform: rotate(4deg) translateY(20px); }
         .polaroid:nth-child(3) { transform: rotate(-2deg); }
         .polaroid:hover { transform: scale(1.05) rotate(0deg); z-index: 10; }
-        .polaroid img { width: 100%; height: 250px; object-fit: cover; background: #eee; border-radius: 2px; }
-        .polaroid-caption { color: #111; font-family: 'Comic Sans MS', cursive, sans-serif; font-size: 1.1rem; font-weight: bold; margin-top: 15px; }
+        .polaroid img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            background: #eee;
+            border-radius: 2px;
+        }
+        .polaroid-caption {
+            color: #111;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
 
-        .heartfelt-card { background: rgba(20, 20, 27, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 40px; max-width: 700px; margin: 0 auto 100px auto; }
+        .heartfelt-card {
+            background: rgba(20, 20, 27, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 700px;
+            margin: 0 auto 100px auto;
+        }
 
-        /* Cake Styling */
-        .cake-stage { position: relative; height: 400px; width: 100%; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 50px; cursor: pointer; }
-        .cake-container { width: 300px; height: 300px; position: relative; transform: scale(0.9); pointer-events: none; }
-        .plate { position: absolute; bottom: 5px; left: 15px; width: 270px; height: 24px; background: linear-gradient(to bottom, #222, #000); border-radius: 50%; box-shadow: 0 0 25px #ff9a00, 0 10px 20px rgba(0,0,0,0.6); z-index: 1; }
-        .tier { position: absolute; background-color: #ffffff; background-image: radial-gradient(#000000 20%, transparent 20%), radial-gradient(#000000 20%, transparent 20%); background-size: 30px 30px; background-position: 0 0, 15px 15px; transform-origin: bottom center; }
-        .tier::before { content: ''; position: absolute; left: 0; width: 100%; background: linear-gradient(to right, #ccc, #eee 50%, #ccc); border-radius: 50%; z-index: 2; box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2); }
-        .tier-bottom { width: 200px; height: 75px; bottom: 18px; left: 50px; border-radius: 0 0 100px 100px / 0 0 20px 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 2; }
+        /* ---- Cake ---- */
+        .cake-stage {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 50px;
+            cursor: pointer;
+        }
+        .cake-container {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+        .plate {
+            position: absolute;
+            bottom: 5px; left: 15px;
+            width: 270px; height: 24px;
+            background: linear-gradient(to bottom, #222, #000);
+            border-radius: 50%;
+            box-shadow: 0 0 25px #ff9a00, 0 10px 20px rgba(0,0,0,0.6);
+            z-index: 1;
+        }
+        .tier {
+            position: absolute;
+            background-color: #ffffff;
+            background-image:
+                radial-gradient(#000000 20%, transparent 20%),
+                radial-gradient(#000000 20%, transparent 20%);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            transform-origin: bottom center;
+        }
+        .tier::before {
+            content: '';
+            position: absolute;
+            left: 0; width: 100%;
+            background: linear-gradient(to right, #ccc, #eee 50%, #ccc);
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2);
+        }
+        .tier-bottom {
+            width: 200px; height: 75px;
+            bottom: 18px; left: 50px;
+            border-radius: 0 0 100px 100px / 0 0 20px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
         .tier-bottom::before { top: -12px; height: 24px; }
-        .tier-top { width: 140px; height: 65px; bottom: 83px; left: 80px; border-radius: 0 0 70px 70px / 0 0 16px 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); z-index: 3; }
+        .tier-top {
+            width: 140px; height: 65px;
+            bottom: 83px; left: 80px;
+            border-radius: 0 0 70px 70px / 0 0 16px 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            z-index: 3;
+        }
         .tier-top::before { top: -9px; height: 18px; }
+
+        /* Cow features */
         .cow-feature { position: absolute; background: #ffcc80; z-index: 10; }
         .horn { width: 12px; height: 25px; border-radius: 50% 50% 0 0; box-shadow: 0 0 10px #ff9a00; }
-        .horn-l { top: -20px; left: 10px; transform: rotate(-20deg); }
+        .horn-l { top: -20px; left: 10px;  transform: rotate(-20deg); }
         .horn-r { top: -20px; right: 10px; transform: rotate(20deg); }
-        .ear { width: 20px; height: 20px; background: #333; border-radius: 50%; }
-        .ear-l { top: 10px; left: -10px; }
+        .ear   { width: 20px; height: 20px; background: #333; border-radius: 50%; }
+        .ear-l { top: 10px; left:  -10px; }
         .ear-r { top: 10px; right: -10px; }
-        .candle-container { position: absolute; bottom: 144px; left: 142px; width: 16px; height: 55px; background: repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, #ff9a00 6px, #ff9a00 12px); border-radius: 4px; transform-origin: bottom center; z-index: 10; }
-        
-        /* Updated Flame CSS with slower, 1.5s fade out */
-        .flame { position: absolute; top: -38px; left: -2px; width: 20px; height: 38px; background: radial-gradient(ellipse at bottom, #ffffff 0%, #ffdf7a 30%, #ff3300 70%, #aa0055 100%); border-radius: 50% 50% 20% 20%; transform-origin: bottom center; animation: flicker 0.12s ease-in-out infinite alternate; box-shadow: 0 0 20px #ff3300, 0 0 40px #ff0055, 0 0 60px #ffbc00, 0 -10px 20px #ffffff; pointer-events: auto; cursor: pointer; transition: opacity 1.5s ease-out, transform 1.5s ease-in; }
-        @keyframes flicker { 0% { transform: scale(1) rotate(-1.5deg); box-shadow: 0 0 20px #ff3300, 0 0 40px #ff0055, 0 -8px 15px #ffffff; } 100% { transform: scale(1.06) rotate(2deg); box-shadow: 0 0 25px #ff3300, 0 0 50px #ff0055, 0 -12px 25px #ffffff; } }
-        
+
+        /* Candle */
+        .candle-container {
+            position: absolute;
+            bottom: 144px; left: 142px;
+            width: 16px; height: 55px;
+            background: repeating-linear-gradient(45deg, #ffffff, #ffffff 6px, #ff9a00 6px, #ff9a00 12px);
+            border-radius: 4px;
+            transform-origin: bottom center;
+            z-index: 10;
+        }
+        .flame {
+            position: absolute;
+            top: -38px; left: -2px;
+            width: 20px; height: 38px;
+            background: radial-gradient(ellipse at bottom, #ffffff 0%, #ffdf7a 30%, #ff3300 70%, #aa0055 100%);
+            border-radius: 50% 50% 20% 20%;
+            transform-origin: bottom center;
+            animation: flicker 0.12s ease-in-out infinite alternate;
+            box-shadow: 0 0 20px #ff3300, 0 0 40px #ff0055, 0 0 60px #ffbc00, 0 -10px 20px #ffffff;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: opacity 1.5s ease-out, transform 1.5s ease-in;
+        }
+        @keyframes flicker {
+            0%   { transform: scale(1) rotate(-1.5deg);  box-shadow: 0 0 20px #ff3300, 0 0 40px #ff0055, 0 -8px  15px #ffffff; }
+            100% { transform: scale(1.06) rotate(2deg);  box-shadow: 0 0 25px #ff3300, 0 0 50px #ff0055, 0 -12px 25px #ffffff; }
+        }
         .flame.extinguished {
             opacity: 0 !important;
             transform: scale(0) !important;
@@ -144,49 +452,80 @@
             box-shadow: none !important;
         }
 
-        /* Easter Egg Toast */
-        #easter-egg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #ff0055; color: #fff; padding: 15px 30px; font-weight: bold; border-radius: 50px; z-index: 999; display: none; box-shadow: 0 10px 30px rgba(255,0,85,0.5); animation: popInOut 3s forwards; }
+        /* =============================================
+           EASTER EGG TOAST
+        ============================================= */
+        #easter-egg {
+            position: fixed;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: #ff0055;
+            color: #fff;
+            padding: 15px 30px;
+            font-weight: bold;
+            border-radius: 50px;
+            z-index: 999;
+            display: none;
+            box-shadow: 0 10px 30px rgba(255,0,85,0.5);
+            animation: popInOut 3s forwards;
+        }
 
-        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999; }
+        /* =============================================
+           CONFETTI CANVAS
+        ============================================= */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
 
-    <audio id="audio-startup" src=""></audio>
-    <audio id="audio-heartbeat" loop src=""></audio>
+    <!-- Celebration audio only (user's file) -->
     <audio id="audio-celebration" loop src="song.mpeg"></audio>
 
+    <!-- Overlays -->
     <canvas id="confetti-canvas"></canvas>
-    
     <div id="easter-egg">🎂 You are now officially addicted to this website.</div>
 
+    <!-- ================================================
+         PHASE 1: Entry
+    ================================================ -->
     <div id="phase1" class="screen active">
-        <div class="sys-event-badge" style="color: #444; border-color: #444;">AI STATUS: COLD LOGIC SYSTEM</div>
-        <h1 style="font-family: var(--font-mono); color: var(--accent-red); font-size: 3rem;">SYSTEM BREACH</h1>
-        <p style="font-family: var(--font-mono); font-size: 1.3rem;">We weren’t expecting you… but since you’re here, choose wisely.</p>
-        <button class="btn-primary" onclick="initPhase2()">Proceed to Identity Verification</button>
+        <div class="sys-event-badge" style="color:#444; border-color:#444;">AI STATUS: COLD LOGIC SYSTEM</div>
+        <h1 style="font-family:var(--font-mono); color:var(--accent-red); font-size:3rem;">SYSTEM BREACH</h1>
+        <p style="font-family:var(--font-mono); font-size:1.3rem;">We weren't expecting you… but since you're here, choose wisely.</p>
+        <button class="btn-primary" id="btn-phase1">Proceed to Identity Verification</button>
     </div>
 
+    <!-- ================================================
+         PHASE 2: Personality Selection
+    ================================================ -->
     <div id="phase2" class="screen">
         <div class="sys-event-badge">USER VERIFICATION REQUIRED</div>
         <h1>Identify Yourself</h1>
         <p>Before the system processes you, we need to know what kind of threat we are dealing with. Select your current mode:</p>
         <div class="btn-grid">
-            <button class="btn" onclick="startAnalysis('violence')">🔪 Violence Mode</button>
-            <button class="btn" onclick="startAnalysis('civilized')">☕ Civilized Mode</button>
-            <button class="btn" onclick="startAnalysis('apathy')">🙄 I Don't Care</button>
-            <button class="btn" onclick="startAnalysis('confused')">🌀 Confused Mode</button>
+            <button class="btn" data-personality="violence">🔪 Violence Mode</button>
+            <button class="btn" data-personality="civilized">☕ Civilized Mode</button>
+            <button class="btn" data-personality="apathy">🙄 I Don't Care</button>
+            <button class="btn" data-personality="confused">🌀 Confused Mode</button>
         </div>
     </div>
 
+    <!-- ================================================
+         PHASE 3: Analysis / Terminal
+    ================================================ -->
     <div id="phase3" class="screen">
-        <div class="sys-event-badge" style="color: #ff9a00; border-color: #ff9a00;">AI STATUS: ANALYZING BEHAVIORAL FLAWS</div>
+        <div class="sys-event-badge" style="color:#ff9a00; border-color:#ff9a00;">AI STATUS: ANALYZING BEHAVIORAL FLAWS</div>
         <div class="terminal-box">
-            <span class="term-text" id="term-line1">> INITIALIZING PERSONALITY SCAN...</span>
-            <span class="term-text" id="term-line2" style="display:none;">> CHECKING FRIENDSHIP VALUE...</span>
-            <span class="term-text" id="term-line3" style="display:none;">> CALCULATING BIRTHDAY IMPORTANCE...</span>
-            <span class="term-text" id="term-line4" style="display:none; color: var(--accent-red); font-weight: bold; margin-top: 20px; font-size: 1.3rem;">> This might take a while… we are dealing with YOU.</span>
-            
+            <span class="term-text" id="term-line1">&gt; INITIALIZING PERSONALITY SCAN...</span>
+            <span class="term-text" id="term-line2" style="display:none;">&gt; CHECKING FRIENDSHIP VALUE...</span>
+            <span class="term-text" id="term-line3" style="display:none;">&gt; CALCULATING BIRTHDAY IMPORTANCE...</span>
+            <span class="term-text" id="term-line4" style="display:none; color:var(--accent-red); font-weight:bold; margin-top:20px; font-size:1.3rem;">&gt; This might take a while… we are dealing with YOU.</span>
             <div class="progress-container">
                 <div class="progress-bar" id="progress-bar"></div>
                 <div class="progress-text" id="progress-text">0%</div>
@@ -194,284 +533,595 @@
         </div>
     </div>
 
+    <!-- ================================================
+         PHASE 4: Roast
+    ================================================ -->
     <div id="phase4" class="screen">
-        <div class="sys-event-badge" style="color: var(--accent-red); border-color: var(--accent-red); animation: pulse-border 2s infinite;">AI STATUS: SARCASM MODULE ONLINE. TARGET ACQUIRED.</div>
-        <div class="chat-bubble" id="roast-bubble">
-            "Oh wow… you actually made it here."
+        <div class="sys-event-badge" style="color:var(--accent-red); border-color:var(--accent-red); animation:pulse-border 2s infinite;">
+            AI STATUS: SARCASM MODULE ONLINE. TARGET ACQUIRED.
         </div>
-        <p style="font-weight: bold; font-size: 1.4rem;">"We considered not celebrating you… but here we are."</p>
-        <button class="btn-primary" onclick="triggerReveal()">Excuse me?</button>
+        <div class="chat-bubble" id="roast-bubble">"Oh wow… you actually made it here."</div>
+        <p style="font-weight:bold; font-size:1.4rem;">"We considered not celebrating you… but here we are."</p>
+        <button class="btn-primary" id="btn-reveal">Excuse me?</button>
     </div>
 
-    <div id="phase5" class="screen" style="background: radial-gradient(circle at center, #1a0a10, #09090b);">
+    <!-- ================================================
+         PHASE 5: Birthday Reveal
+    ================================================ -->
+    <div id="phase5" class="screen" style="background:radial-gradient(circle at center, #1a0a10, #09090b);">
         <h2 class="reveal-sub">AGREED BY UNANIMOUS VOTE:</h2>
         <h1 class="reveal-main">IT IS YOUR BIRTHDAY.</h1>
-        <p style="font-size: 1.5rem; color: #fff;">There is no escaping it.</p>
-        <button class="btn-primary" style="margin-top: 30px;" onclick="startChaosZone()">Accept The Consequences</button>
+        <p style="font-size:1.5rem; color:#fff;">There is no escaping it.</p>
+        <button class="btn-primary" style="margin-top:30px;" id="btn-chaos">Accept The Consequences</button>
     </div>
 
+    <!-- ================================================
+         PHASE 6: Chaos / Quiz
+    ================================================ -->
     <div id="phase6" class="screen">
-        <div class="sys-event-badge" style="color: #ff9a00; border-color: #ff9a00;">AI STATUS: SYSTEM OVERHEATING / CHAOS INJECTED</div>
-        
+        <div class="sys-event-badge" style="color:#ff9a00; border-color:#ff9a00;">AI STATUS: SYSTEM OVERHEATING / CHAOS INJECTED</div>
+
         <div id="chaos-step-1">
             <div class="chat-bubble">Quick Quiz: The system requires honesty. Which of these is your biggest flaw?</div>
             <div class="btn-grid">
-                <button class="btn" onclick="triggerGift('stubborn')">My stubbornness</button>
-                <button class="btn" onclick="triggerGift('humor')">My weird humor</button>
-                <button class="btn" onclick="triggerGift('denial')">My denial</button>
-                <button class="btn" onclick="triggerGift('all')">All of the above</button>
+                <button class="btn" data-flaw="stubborn">My stubbornness</button>
+                <button class="btn" data-flaw="humor">My weird humor</button>
+                <button class="btn" data-flaw="denial">My denial</button>
+                <button class="btn" data-flaw="all">All of the above</button>
             </div>
         </div>
 
         <div id="chaos-step-2" class="chaos-box">
-            <h2 style="color: var(--accent-green); margin-bottom: 10px;">🎁 GIFT UNLOCKED</h2>
-            <p id="gift-text" style="font-size: 1.4rem; font-weight: bold; color: #fff;"></p>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <div class="sys-event-badge" style="color: var(--accent-red); border-color: var(--accent-red); animation: blink 1s infinite;">CRITICAL SYSTEM EVENT: CAKE PROXIMITY DETECTED</div>
+            <h2 style="color:var(--accent-green); margin-bottom:10px;">🎁 GIFT UNLOCKED</h2>
+            <p id="gift-text" style="font-size:1.4rem; font-weight:bold; color:#fff;"></p>
+            <div style="margin-top:30px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+                <div class="sys-event-badge" style="color:var(--accent-red); border-color:var(--accent-red); animation:pulse-border 2s infinite;">
+                    CRITICAL SYSTEM EVENT: CAKE PROXIMITY DETECTED
+                </div>
                 <p>Logic circuits failing. Wholesomeness overload imminent.</p>
-                <button class="btn-primary" style="background: #333;" onclick="triggerFakeEnding()">ABORT AND SHUTDOWN</button>
+                <button class="btn-primary" style="background:#333;" id="btn-fake-end">ABORT AND SHUTDOWN</button>
             </div>
         </div>
     </div>
 
-    <div id="phase7" class="screen" style="background-color: #000;">
-        <p style="font-family: var(--font-mono); color: white; font-size: 1.5rem; letter-spacing: 1px;">That’s all. You can leave now.</p>
-        <p style="font-family: var(--font-mono); font-size: 0.9rem; color: #444; margin-top: 50px;">[ System disconnected ]</p>
+    <!-- ================================================
+         PHASE 7: Fake Ending
+    ================================================ -->
+    <div id="phase7" class="screen" style="background-color:#000;">
+        <p style="font-family:var(--font-mono); color:white; font-size:1.5rem; letter-spacing:1px;">That's all. You can leave now.</p>
+        <p style="font-family:var(--font-mono); font-size:0.9rem; color:#444; margin-top:50px;">[ System disconnected ]</p>
     </div>
 
-    <div id="phase8" class="screen" style="background-color: #050000;">
-        <div class="sys-event-badge" style="color: var(--accent-red); border-color: var(--accent-red);">AI STATUS: SYSTEM PANIC // EMOTION PROTOCOL INITIATED</div>
+    <!-- ================================================
+         PHASE 8: Glitch Twist
+    ================================================ -->
+    <div id="phase8" class="screen" style="background-color:#050000;">
+        <div class="sys-event-badge" style="color:var(--accent-red); border-color:var(--accent-red);">AI STATUS: SYSTEM PANIC // EMOTION PROTOCOL INITIATED</div>
         <h1 class="glitch-text" data-text="YOU REALLY THOUGHT IT WAS OVER?">YOU REALLY THOUGHT IT WAS OVER?</h1>
-        <h2 style="color: var(--accent-red); font-size: 2.5rem; margin-top: 20px;">That's cute.</h2>
+        <h2 style="color:var(--accent-red); font-size:2.5rem; margin-top:20px;">That's cute.</h2>
     </div>
 
+    <!-- ================================================
+         PHASE 9: Final / Heartfelt
+    ================================================ -->
     <div id="phase9" class="screen">
-        <div class="sys-event-badge" style="color: #fff; background: rgba(255,255,255,0.2); border-color: #fff;">AI CORE OVERRIDDEN BY ACTUAL HUMAN FEELINGS</div>
-        
+        <div class="sys-event-badge" style="color:#fff; background:rgba(255,255,255,0.2); border-color:#fff;">
+            AI CORE OVERRIDDEN BY ACTUAL HUMAN FEELINGS
+        </div>
+
         <div class="heartfelt-card">
-            <h1 style="color: var(--accent-gold); font-size: 3rem; margin-bottom: 20px;">Happy Birthday.</h1>
-            <p style="color: #fff; font-size: 1.4rem; font-weight: 500;">
-                You’re actually appreciated more than this website admits.
+            <h1 style="color:var(--accent-gold); font-size:3rem; margin-bottom:20px;">Happy Birthday.</h1>
+            <p style="color:#fff; font-size:1.4rem; font-weight:500;">
+                You're actually appreciated more than this website admits.
             </p>
-            <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 0;">
+            <p style="color:#a1a1aa; font-size:1.1rem; margin-bottom:0;">
                 (But seriously, I kept the receipts from the personality test.)
             </p>
         </div>
 
-        <h2 style="color: #fff; font-family: 'Comic Sans MS', cursive, sans-serif; opacity: 0.8; margin-bottom: 10px;">The Archives:</h2>
+        <h2 style="color:#fff; font-family:'Comic Sans MS',cursive,sans-serif; opacity:0.8; margin-bottom:10px;">The Archives:</h2>
+
+        <!-- BUG FIX: The first polaroid was missing its closing </div>.
+             Also moved the caption inside the polaroid div where it belongs. -->
         <div class="photo-gallery">
-            <div class="polaroid"><img src="2.webp">Core Memory 1</div></div>
-            <div class="polaroid"><img src="1.jpg" alt="2"><div class="polaroid-caption">Good Times</div></div>
-            <div class="polaroid"><img src="3.jpg" alt="3"><div class="polaroid-caption">A Legend</div></div>
+            <div class="polaroid">
+                <img src="2.webp" alt="Core Memory 1">
+                <div class="polaroid-caption">Core Memory 1</div>
+            </div>
+            <div class="polaroid">
+                <img src="1.jpg" alt="Good Times">
+                <div class="polaroid-caption">Good Times</div>
+            </div>
+            <div class="polaroid">
+                <img src="3.jpg" alt="A Legend">
+                <div class="polaroid-caption">A Legend</div>
+            </div>
         </div>
 
-        <div class="cake-stage" onclick="tapCake()">
+        <div class="cake-stage" id="cake-stage">
             <div class="cake-container">
                 <div class="plate"></div>
                 <div class="tier tier-bottom"></div>
                 <div class="tier tier-top">
-                    <div class="cow-feature ear ear-l"></div> <div class="cow-feature ear ear-r"></div>
-                    <div class="cow-feature horn horn-l"></div> <div class="cow-feature horn horn-r"></div>
+                    <div class="cow-feature ear ear-l"></div>
+                    <div class="cow-feature ear ear-r"></div>
+                    <div class="cow-feature horn horn-l"></div>
+                    <div class="cow-feature horn horn-r"></div>
                 </div>
-                <div class="candle-container"><div class="flame" onclick="extinguishFlame(event)"></div></div>
+                <div class="candle-container">
+                    <div class="flame" id="flame"></div>
+                </div>
             </div>
         </div>
 
-        <button class="btn" style="margin-top: 60px; border-color: rgba(255,255,255,0.2);" onclick="location.reload()">Replay Chaos</button>
-
+        <button class="btn" style="margin-top:60px; border-color:rgba(255,255,255,0.2);" id="btn-replay">Replay Chaos</button>
     </div>
 
     <script>
-        let currentPhase = 1;
+        /* =============================================
+           STATE
+        ============================================= */
         let selectedPersonality = '';
-        let chaosInterval;
-        let cakeTaps = 0;
+        let chaosInterval       = null;
+        let cakeTaps            = 0;
 
-        // Audio Elements
-        const sfxStartup = document.getElementById('audio-startup');
-        const sfxHeartbeat = document.getElementById('audio-heartbeat');
+        /* =============================================
+           WEB AUDIO ENGINE
+        ============================================= */
+        let audioCtx = null;
+        let personalityTrack = null; // holds { nodes, stop() } for the looping personality music
         const sfxCelebrate = document.getElementById('audio-celebration');
 
-        // Safe play function to prevent browser errors if no audio file exists
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
         function playAudio(audioObj) {
-            if(audioObj.src && audioObj.src !== window.location.href) {
-                audioObj.play().catch(e => console.log("Audio play prevented or missing file."));
+            if (audioObj && audioObj.src && audioObj.src !== window.location.href) {
+                audioObj.play().catch(() => {});
             }
         }
 
-        function nextPhase(phaseNumber) {
+        function stopPersonalityTrack() {
+            if (personalityTrack) {
+                personalityTrack.stop();
+                personalityTrack = null;
+            }
+        }
+
+        /* --- VIOLENCE: heavy pulsing synth bass + fast metallic hits --- */
+        function playViolenceMusic() {
+            const ctx = getAudioCtx();
+            const masterGain = ctx.createGain();
+            masterGain.gain.value = 0.4;
+            masterGain.connect(ctx.destination);
+
+            // Distortion
+            const dist = ctx.createWaveShaper();
+            const curve = new Float32Array(256);
+            for (let i = 0; i < 256; i++) {
+                const x = (i * 2) / 256 - 1;
+                curve[i] = (Math.PI + 300) * x / (Math.PI + 300 * Math.abs(x));
+            }
+            dist.curve = curve;
+            dist.connect(masterGain);
+
+            const notes  = [55, 55, 58, 55, 52, 55, 50, 55]; // aggressive riff in Hz (A1 area)
+            const bpm    = 160;
+            const beat   = 60 / bpm;
+            let step     = 0;
+            let stopped  = false;
+
+            function scheduleNote() {
+                if (stopped) return;
+                const freq = notes[step % notes.length] * 1.0;
+                const t    = ctx.currentTime;
+
+                // Bass oscillator
+                const osc = ctx.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, t);
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0.8, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + beat * 0.8);
+                osc.connect(g); g.connect(dist);
+                osc.start(t); osc.stop(t + beat);
+
+                // High metallic ping every 2 steps
+                if (step % 2 === 0) {
+                    const ping = ctx.createOscillator();
+                    ping.type = 'square';
+                    ping.frequency.value = 880;
+                    const pg = ctx.createGain();
+                    pg.gain.setValueAtTime(0.15, t);
+                    pg.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                    ping.connect(pg); pg.connect(masterGain);
+                    ping.start(t); ping.stop(t + 0.06);
+                }
+
+                step++;
+                setTimeout(scheduleNote, beat * 1000);
+            }
+            scheduleNote();
+            return { stop: () => { stopped = true; masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.3); } };
+        }
+
+        /* --- CIVILIZED: gentle jazz-ish piano chords --- */
+        function playCivilizedMusic() {
+            const ctx = getAudioCtx();
+            const masterGain = ctx.createGain();
+            masterGain.gain.value = 0.25;
+
+            // Soft reverb via convolver approximation (delay+feedback)
+            const delay = ctx.createDelay(0.5);
+            delay.delayTime.value = 0.3;
+            const feedback = ctx.createGain();
+            feedback.gain.value = 0.3;
+            delay.connect(feedback); feedback.connect(delay);
+            delay.connect(masterGain);
+            masterGain.connect(ctx.destination);
+
+            // Jazz chord voicings (frequencies in Hz) — Cmaj7, Am7, Fmaj7, G7
+            const chords = [
+                [261.63, 329.63, 392.00, 493.88],  // Cmaj7
+                [220.00, 261.63, 329.63, 415.30],  // Am7
+                [174.61, 220.00, 261.63, 349.23],  // Fmaj7
+                [196.00, 246.94, 293.66, 392.00],  // G7
+            ];
+            let ci = 0;
+            let stopped = false;
+            const chordDur = 1.8;
+
+            function playChord() {
+                if (stopped) return;
+                const t = ctx.currentTime;
+                chords[ci % chords.length].forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    const g = ctx.createGain();
+                    // Stagger note entry for a "rolled chord" feel
+                    const onset = t + i * 0.06;
+                    g.gain.setValueAtTime(0, onset);
+                    g.gain.linearRampToValueAtTime(0.25, onset + 0.1);
+                    g.gain.exponentialRampToValueAtTime(0.001, onset + chordDur);
+                    osc.connect(g); g.connect(delay); g.connect(masterGain);
+                    osc.start(onset); osc.stop(onset + chordDur + 0.1);
+                });
+                ci++;
+                setTimeout(playChord, chordDur * 1000);
+            }
+            playChord();
+            return { stop: () => { stopped = true; masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.5); } };
+        }
+
+        /* --- APATHY: super slow lo-fi, drooping pitch, barely alive --- */
+        function playApathyMusic() {
+            const ctx = getAudioCtx();
+            const masterGain = ctx.createGain();
+            masterGain.gain.value = 0.2;
+            masterGain.connect(ctx.destination);
+
+            const notes = [130.81, 116.54, 110.00, 123.47]; // low, sad, flat
+            let ni = 0;
+            let stopped = false;
+            const noteDur = 2.2; // very slow
+
+            function playNote() {
+                if (stopped) return;
+                const t   = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                osc.type  = 'triangle';
+                // Drooping pitch bend — like it can't be bothered
+                osc.frequency.setValueAtTime(notes[ni % notes.length], t);
+                osc.frequency.linearRampToValueAtTime(notes[ni % notes.length] * 0.96, t + noteDur);
+
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0.3, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + noteDur);
+
+                // Random crackle noise (lo-fi vinyl effect)
+                if (Math.random() > 0.5) {
+                    const buf  = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+                    const data = buf.getChannelData(0);
+                    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.04;
+                    const src = ctx.createBufferSource();
+                    src.buffer = buf;
+                    const ng = ctx.createGain(); ng.gain.value = 0.15;
+                    src.connect(ng); ng.connect(masterGain);
+                    src.start(t + Math.random() * noteDur);
+                }
+
+                osc.connect(g); g.connect(masterGain);
+                osc.start(t); osc.stop(t + noteDur);
+                ni++;
+                setTimeout(playNote, noteDur * 1000);
+            }
+            playNote();
+            return { stop: () => { stopped = true; masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.4); } };
+        }
+
+        /* --- CONFUSED: random glitchy tones, wrong notes, stutters --- */
+        function playConfusedMusic() {
+            const ctx = getAudioCtx();
+            const masterGain = ctx.createGain();
+            masterGain.gain.value = 0.22;
+            masterGain.connect(ctx.destination);
+
+            let stopped = false;
+
+            function glitchEvent() {
+                if (stopped) return;
+
+                const t    = ctx.currentTime;
+                const freq = 100 + Math.random() * 900; // totally random pitch
+                const dur  = 0.05 + Math.random() * 0.3;
+                const types = ['sine','square','sawtooth','triangle'];
+                const osc  = ctx.createOscillator();
+                osc.type   = types[Math.floor(Math.random() * types.length)];
+                osc.frequency.setValueAtTime(freq, t);
+                // Random pitch jump mid-note
+                osc.frequency.setValueAtTime(freq * (0.5 + Math.random()), t + dur * 0.5);
+
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0.3, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                osc.connect(g); g.connect(masterGain);
+                osc.start(t); osc.stop(t + dur + 0.01);
+
+                // Irregular next event — sometimes fast stutter, sometimes pause
+                const next = Math.random() > 0.3
+                    ? 80 + Math.random() * 200      // fast stutter
+                    : 400 + Math.random() * 800;    // sudden pause
+                setTimeout(glitchEvent, next);
+            }
+            glitchEvent();
+            return { stop: () => { stopped = true; masterGain.gain.setTargetAtTime(0, ctx.currentTime, 0.2); } };
+        }
+
+        const personalityMusicMap = {
+            violence:  playViolenceMusic,
+            civilized: playCivilizedMusic,
+            apathy:    playApathyMusic,
+            confused:  playConfusedMusic,
+        };
+
+        /* =============================================
+           NAVIGATION
+        ============================================= */
+        function nextPhase(n) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-            document.getElementById(`phase${phaseNumber}`).classList.add('active');
-            currentPhase = phaseNumber;
-            window.scrollTo(0,0);
+            document.getElementById('phase' + n).classList.add('active');
+            window.scrollTo(0, 0);
         }
 
-        // PHASE 1 -> 2
-        function initPhase2() {
-            playAudio(sfxStartup);
+        /* =============================================
+           PHASE 1 → 2
+        ============================================= */
+        document.getElementById('btn-phase1').addEventListener('click', () => {
             nextPhase(2);
-        }
+        });
 
-        // PHASE 2 -> 3 (Branching Story Memory Applied)
+        /* =============================================
+           PHASE 2 → 3  (Personality selection)
+        ============================================= */
+        document.querySelectorAll('#phase2 .btn[data-personality]').forEach(btn => {
+            btn.addEventListener('click', () => startAnalysis(btn.dataset.personality));
+        });
+
         function startAnalysis(choice) {
             selectedPersonality = choice;
-            document.body.className = ''; // reset classes
-            document.body.classList.add('mode-' + choice); // Apply branching CSS changes
-            
-            // Artificial lag for 'Apathy' mode
-            let delayTime = (choice === 'apathy') ? 1500 : 0;
-            
+            document.body.className = '';
+            document.body.classList.add('mode-' + choice);
+
+            // Start the personality soundtrack immediately on click
+            stopPersonalityTrack();
+            personalityTrack = personalityMusicMap[choice]();
+
+            const delay = (choice === 'apathy') ? 1500 : 0;
+
             setTimeout(() => {
                 nextPhase(3);
-                playAudio(sfxHeartbeat); // Start tension audio
-                
-                const bar = document.getElementById('progress-bar');
+
+                const bar  = document.getElementById('progress-bar');
                 const text = document.getElementById('progress-text');
-                
-                setTimeout(() => { document.getElementById('term-line2').style.display = 'block'; bar.style.width = '30%'; text.innerText = '30%'; }, 2000);
-                setTimeout(() => { document.getElementById('term-line3').style.display = 'block'; bar.style.width = '65%'; text.innerText = '65%'; }, 5000);
-                setTimeout(() => { document.getElementById('term-line4').style.display = 'block'; bar.style.width = '99%'; text.innerText = '99% [STALLED]'; text.style.color = 'red'; }, 7000);
-                
-                // Finish Analysis
+
                 setTimeout(() => {
-                    bar.style.width = '100%'; text.innerText = '100%'; text.style.color = '#fff';
+                    document.getElementById('term-line2').style.display = 'block';
+                    bar.style.width = '30%'; text.innerText = '30%';
+                }, 2000);
+
+                setTimeout(() => {
+                    document.getElementById('term-line3').style.display = 'block';
+                    bar.style.width = '65%'; text.innerText = '65%';
+                }, 5000);
+
+                setTimeout(() => {
+                    document.getElementById('term-line4').style.display = 'block';
+                    bar.style.width = '99%';
+                    text.innerText = '99% [STALLED]';
+                    text.style.color = 'red';
+                }, 7000);
+
+                setTimeout(() => {
+                    bar.style.width = '100%';
+                    text.innerText = '100%';
+                    text.style.color = '#fff';
                     setupDynamicRoast();
-                    setTimeout(() => { nextPhase(4); }, 3000);
+                    setTimeout(() => nextPhase(4), 3000);
                 }, 10000);
-            }, delayTime);
+
+            }, delay);
         }
 
+        /* =============================================
+           PHASE 3 → 4  (Dynamic roast text)
+        ============================================= */
         function setupDynamicRoast() {
             const bubble = document.getElementById('roast-bubble');
-            if (selectedPersonality === 'violence') {
-                bubble.innerHTML = `"Oh wow… you actually made it here. 'Violence Mode'? Your reflexes resemble a dial-up modem. We considered not celebrating you… but here we are."`;
-            } else if (selectedPersonality === 'civilized') {
-                bubble.innerHTML = `"Oh wow… you actually made it here. 'Civilized Mode'? Trying to be polite on a website actively judging you is tragic. We considered not celebrating you… but here we are."`;
-            } else if (selectedPersonality === 'apathy') {
-                bubble.innerHTML = `"Oh wow… you actually made it here. 'I Don't Care'? So edgy. Yet you're still clicking through this. We considered not celebrating you… but here we are."`;
-            } else if (selectedPersonality === 'confused') {
-                document.getElementById('term-line1').innerText = "> FIXING YOUR UI GLITCHES...";
-                bubble.innerHTML = `"Oh wow… you actually made it here. 'Confused Mode'? That honestly explains your general life trajectory. We considered not celebrating you… but here we are."`;
+            const roasts = {
+                violence:  `"Oh wow… you actually made it here. 'Violence Mode'? Your reflexes resemble a dial-up modem. We considered not celebrating you… but here we are."`,
+                civilized: `"Oh wow… you actually made it here. 'Civilized Mode'? Trying to be polite on a website actively judging you is tragic. We considered not celebrating you… but here we are."`,
+                apathy:    `"Oh wow… you actually made it here. 'I Don't Care'? So edgy. Yet you're still clicking through this. We considered not celebrating you… but here we are."`,
+                confused:  `"Oh wow… you actually made it here. 'Confused Mode'? That honestly explains your general life trajectory. We considered not celebrating you… but here we are."`
+            };
+            if (selectedPersonality === 'confused') {
+                document.getElementById('term-line1').innerText = '> FIXING YOUR UI GLITCHES...';
             }
+            bubble.innerHTML = roasts[selectedPersonality] || roasts.apathy;
         }
 
-        // PHASE 5 -> REVEAL
-        function triggerReveal() {
-            sfxHeartbeat.pause(); // stop tension
-            playAudio(sfxCelebrate); // start party
+        /* =============================================
+           PHASE 4 → 5  (Reveal)
+        ============================================= */
+        document.getElementById('btn-reveal').addEventListener('click', () => {
+            stopPersonalityTrack();
+            playAudio(sfxCelebrate);
             nextPhase(5);
             celebratePop(100);
-        }
+        });
 
-        // PHASE 6 -> CHAOS ZONE (Random Event Generation)
-        function startChaosZone() {
+        /* =============================================
+           PHASE 5 → 6  (Chaos zone)
+        ============================================= */
+        document.getElementById('btn-chaos').addEventListener('click', () => {
             nextPhase(6);
-            chaosInterval = setInterval(spawnRandomPopup, 2000); // Spawns an event every 2 seconds
-        }
+            chaosInterval = setInterval(spawnRandomPopup, 2000);
+        });
 
         function spawnRandomPopup() {
             const msgs = [
-                "Cake detected nearby 🍰", "Friendship level: Questionable 📉", 
-                "System is judging your life choices 👁️", "Wholesomeness overload imminent ⚠️",
-                "Emotion protocol recalculating..."
+                'Cake detected nearby 🍰',
+                'Friendship level: Questionable 📉',
+                'System is judging your life choices 👁️',
+                'Wholesomeness overload imminent ⚠️',
+                'Emotion protocol recalculating...'
             ];
             const toast = document.createElement('div');
             toast.className = 'random-toast';
-            toast.innerText = msgs[Math.floor(Math.random()*msgs.length)];
+            toast.innerText = msgs[Math.floor(Math.random() * msgs.length)];
             toast.style.left = (Math.random() * 60 + 10) + 'vw';
-            toast.style.top = (Math.random() * 60 + 10) + 'vh';
+            toast.style.top  = (Math.random() * 60 + 10) + 'vh';
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2500);
         }
 
+        /* =============================================
+           PHASE 6: Flaw quiz → gift reveal
+        ============================================= */
+        document.querySelectorAll('#phase6 .btn[data-flaw]').forEach(btn => {
+            btn.addEventListener('click', () => triggerGift(btn.dataset.flaw));
+        });
+
         function triggerGift(flaw) {
             document.getElementById('chaos-step-1').style.display = 'none';
-            const giftText = document.getElementById('gift-text');
-            
-            if (flaw === 'stubborn') giftText.innerHTML = `1 Year of Unsolicited Advice! <br><span style="font-size:1rem; color:#aaa;">(Not like you'll listen anyway.)</span>`;
-            else if (flaw === 'humor') giftText.innerHTML = `A Mirror! <br><span style="font-size:1rem; color:#aaa;">(So you can finally look at the biggest joke of all.)</span>`;
-            else if (flaw === 'denial') giftText.innerHTML = `A Reality Check! <br><span style="font-size:1rem; color:#aaa;">(Delivery pending. You'll probably reject the package.)</span>`;
-            else if (flaw === 'all') giftText.innerHTML = `A Therapist's Business Card! <br><span style="font-size:1rem; color:#aaa;">(We pooled our money together for you.)</span>`;
 
+            const gifts = {
+                stubborn: `1 Year of Unsolicited Advice! <br><span style="font-size:1rem;color:#aaa;">(Not like you'll listen anyway.)</span>`,
+                humor:    `A Mirror! <br><span style="font-size:1rem;color:#aaa;">(So you can finally look at the biggest joke of all.)</span>`,
+                denial:   `A Reality Check! <br><span style="font-size:1rem;color:#aaa;">(Delivery pending. You'll probably reject the package.)</span>`,
+                all:      `A Therapist's Business Card! <br><span style="font-size:1rem;color:#aaa;">(We pooled our money together for you.)</span>`
+            };
+
+            document.getElementById('gift-text').innerHTML = gifts[flaw] || gifts.all;
             document.getElementById('chaos-step-2').style.display = 'block';
         }
 
-        // PHASE 7, 8, 9 -> ENDING SEQUENCE
-        function triggerFakeEnding() {
-            clearInterval(chaosInterval); // Stop random popups
-            sfxCelebrate.pause(); // cut music abruptly
-            document.body.className = ''; // remove memory mods for seriousness
+        /* =============================================
+           PHASE 6 → 7 → 8 → 9  (Fake ending sequence)
+        ============================================= */
+        document.getElementById('btn-fake-end').addEventListener('click', () => {
+            clearInterval(chaosInterval);
+            sfxCelebrate.pause();
+            sfxCelebrate.currentTime = 0;
+            document.body.className = '';
             nextPhase(7);
-            
-            // Wait 4 seconds in the dark, then Glitch Twist
+
             setTimeout(() => {
                 nextPhase(8);
-                
-                // Show Glitch for 3.5 seconds, then Final Core Reveal
                 setTimeout(() => {
-                    playAudio(sfxCelebrate); // bring back the celebration
+                    playAudio(sfxCelebrate);
                     nextPhase(9);
-                    setInterval(() => { if(Math.random() > 0.4) celebratePop(50); }, 1500);
+                    setInterval(() => { if (Math.random() > 0.4) celebratePop(50); }, 1500);
                 }, 3500);
-
             }, 4000);
-        }
+        });
 
-        // HIDDEN EASTER EGG LOGIC
-        function tapCake() {
+        /* =============================================
+           PHASE 9: Cake interactions
+        ============================================= */
+        // Easter egg: tap cake 5 times
+        document.getElementById('cake-stage').addEventListener('click', () => {
             cakeTaps++;
-            if(cakeTaps === 5) {
-                document.getElementById('easter-egg').style.display = 'block';
+            if (cakeTaps === 5) {
+                const egg = document.getElementById('easter-egg');
+                egg.style.display = 'block';
             }
-        }
+        });
 
-        // BLOW OUT THE CANDLE LOGIC
-        function extinguishFlame(event) {
-            event.stopPropagation(); // Stop the easter egg counter from registering this click
-            event.target.classList.add('extinguished');
-        }
+        // Blow out flame (click the flame itself)
+        document.getElementById('flame').addEventListener('click', (e) => {
+            e.stopPropagation(); // Don't count as a cake tap
+            e.target.classList.add('extinguished');
+        });
 
-        // --- CONFETTI SYSTEM ---
+        // Replay button
+        document.getElementById('btn-replay').addEventListener('click', () => location.reload());
+
+        /* =============================================
+           CONFETTI SYSTEM
+        ============================================= */
         const canvas = document.getElementById('confetti-canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx    = canvas.getContext('2d');
         let particles = [];
 
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        function resizeCanvas() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
         class ConfettiParticle {
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * -canvas.height - 20;
-                this.size = Math.random() * 8 + 6;
-                this.color = ['#d4af37', '#f3e5ab', '#ff3355', '#22c55e', '#33eedd', '#9933ff'][Math.floor(Math.random() * 6)];
-                this.speedX = Math.random() * 4 - 2;
-                this.speedY = Math.random() * 5 + 4;
-                this.rotation = Math.random() * 360;
+                this.x             = Math.random() * canvas.width;
+                this.y             = Math.random() * -canvas.height - 20;
+                this.size          = Math.random() * 8 + 6;
+                this.color         = ['#d4af37','#f3e5ab','#ff3355','#22c55e','#33eedd','#9933ff'][Math.floor(Math.random() * 6)];
+                this.speedX        = Math.random() * 4 - 2;
+                this.speedY        = Math.random() * 5 + 4;
+                this.rotation      = Math.random() * 360;
                 this.rotationSpeed = Math.random() * 4 - 2;
             }
-            update() { this.x += this.speedX; this.y += this.speedY; this.rotation += this.rotationSpeed; }
+            update() {
+                this.x        += this.speedX;
+                this.y        += this.speedY;
+                this.rotation += this.rotationSpeed;
+            }
             draw() {
-                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation * Math.PI / 180);
-                ctx.fillStyle = this.color; ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
                 ctx.restore();
             }
         }
 
         function animateConfetti() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((p, index) => {
+            particles.forEach((p, i) => {
                 p.update(); p.draw();
-                if (p.y > canvas.height) particles.splice(index, 1);
+                if (p.y > canvas.height) particles.splice(i, 1);
             });
             requestAnimationFrame(animateConfetti);
         }
-        animateConfetti(); 
+        animateConfetti();
 
         function celebratePop(amount) {
-            for (let i = 0; i < amount; i++) { particles.push(new ConfettiParticle()); }
+            for (let i = 0; i < amount; i++) particles.push(new ConfettiParticle());
         }
     </script>
 </body>
