@@ -439,7 +439,7 @@
             box-shadow: 0 0 20px #ff3300, 0 0 40px #ff0055, 0 0 60px #ffbc00, 0 -10px 20px #ffffff;
             pointer-events: auto;
             cursor: pointer;
-            transition: opacity 1.5s ease-out, transform 1.5s ease-in;
+            transition: opacity 2.5s ease-out, transform 2.5s ease-in, box-shadow 2.5s ease-out;
         }
         @keyframes flicker {
             0%   { transform: scale(1) rotate(-1.5deg);  box-shadow: 0 0 20px #ff3300, 0 0 40px #ff0055, 0 -8px  15px #ffffff; }
@@ -447,9 +447,105 @@
         }
         .flame.extinguished {
             opacity: 0 !important;
-            transform: scale(0) !important;
+            transform: scale(0) translateY(10px) !important;
             animation: none !important;
             box-shadow: none !important;
+            pointer-events: none !important;
+        }
+
+        /* =============================================
+           CANDLE WISH HINT
+        ============================================= */
+        .wish-hint {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            animation: hint-pulse 2s ease-in-out infinite;
+        }
+        .wish-hint-text {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-size: 1.1rem;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+        }
+        .wish-hint-arrow {
+            font-size: 1.8rem;
+            animation: bounce-up 1.2s ease-in-out infinite;
+        }
+        @keyframes hint-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes bounce-up {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .wish-hint.hidden { display: none; }
+
+        /* =============================================
+           MOBILE RESPONSIVE
+        ============================================= */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            p  { font-size: 1rem; }
+
+            .screen { padding: 16px; }
+
+            /* Phase 1 */
+            #phase1 h1 { font-size: 2.2rem; }
+
+            /* Btn grid → single column on small screens */
+            .btn-grid { grid-template-columns: 1fr; gap: 10px; }
+            .btn { padding: 14px 18px; font-size: 0.95rem; }
+            .btn-primary { padding: 14px 24px; }
+
+            /* Terminal */
+            .terminal-box { padding: 18px; font-size: 0.85rem; }
+            .term-text { font-size: 0.9rem; }
+
+            /* Chat bubble */
+            .chat-bubble { font-size: 1.1rem; padding: 18px; }
+
+            /* Reveal */
+            .reveal-sub { font-size: 1.1rem; }
+            .reveal-main { font-size: clamp(2.5rem, 12vw, 4rem); }
+
+            /* Glitch phase */
+            .glitch-text { font-size: clamp(1.4rem, 7vw, 2rem); }
+
+            /* Heartfelt card */
+            .heartfelt-card { padding: 24px 18px; margin-bottom: 50px; }
+            .heartfelt-card h1 { font-size: 2rem; }
+
+            /* Photo gallery — stack vertically, smaller */
+            .photo-gallery { flex-direction: column; align-items: center; gap: 30px; margin-bottom: 40px; }
+            .polaroid { width: 85vw; max-width: 300px; }
+            .polaroid img { height: 200px; }
+            /* Remove excessive rotations on mobile (hard to see) */
+            .polaroid,
+            .polaroid:nth-child(2),
+            .polaroid:nth-child(3) { transform: rotate(-1deg); }
+
+            /* Cake — scale down to fit screen */
+            .cake-stage { height: 300px; padding-bottom: 20px; }
+            .cake-container { transform: scale(0.65); transform-origin: bottom center; }
+
+            /* wish hint */
+            .wish-hint-text { font-size: 0.95rem; }
+
+            /* Sys badge */
+            .sys-event-badge { font-size: 0.7rem; padding: 4px 10px; letter-spacing: 1px; }
+
+            /* Phase 9 padding */
+            #phase9 { padding-top: 40px; padding-bottom: 80px; padding-left: 12px; padding-right: 12px; }
+        }
+
+        @media (max-width: 380px) {
+            h1 { font-size: 1.5rem; }
+            .cake-container { transform: scale(0.55); }
+            .reveal-main { font-size: 2.2rem; }
         }
 
         /* =============================================
@@ -636,6 +732,11 @@
                 <img src="3.jpg" alt="A Legend">
                 <div class="polaroid-caption">A Legend</div>
             </div>
+        </div>
+
+        <div class="wish-hint" id="wish-hint">
+            <div class="wish-hint-arrow">👆</div>
+            <div class="wish-hint-text">✨ Make a wish & tap the flame ✨</div>
         </div>
 
         <div class="cake-stage" id="cake-stage">
@@ -1061,10 +1162,115 @@
             }
         });
 
-        // Blow out flame (click the flame itself)
+        // Blow out flame — plays moo then slowly fades the flame
         document.getElementById('flame').addEventListener('click', (e) => {
-            e.stopPropagation(); // Don't count as a cake tap
-            e.target.classList.add('extinguished');
+            e.stopPropagation();
+            const flame = e.currentTarget;
+            if (flame.classList.contains('extinguished')) return;
+
+            // Hide the wish hint
+            document.getElementById('wish-hint').classList.add('hidden');
+
+            // --- REALISTIC MOO via formant synthesis ---
+            const mooCtx = getAudioCtx();
+
+            // Master output with overall envelope
+            const master = mooCtx.createGain();
+            master.connect(mooCtx.destination);
+            const t = mooCtx.currentTime;
+            const dur = 2.6;
+
+            // Volume envelope: soft attack, full sustain, long tail
+            master.gain.setValueAtTime(0, t);
+            master.gain.linearRampToValueAtTime(0.55, t + 0.15);
+            master.gain.setValueAtTime(0.55, t + 0.5);
+            master.gain.linearRampToValueAtTime(0.45, t + 1.4);
+            master.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+            // Pitch contour: rises then slowly droops (mMOOooo shape)
+            // Fundamental ~160Hz for a deep cow
+            function makePitch(freq, type, gainVal) {
+                const osc = mooCtx.createOscillator();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq * 0.88, t);
+                osc.frequency.linearRampToValueAtTime(freq * 1.08, t + 0.22);
+                osc.frequency.linearRampToValueAtTime(freq * 1.0,  t + 0.55);
+                osc.frequency.linearRampToValueAtTime(freq * 0.92, t + 1.3);
+                osc.frequency.linearRampToValueAtTime(freq * 0.78, t + dur);
+                const g = mooCtx.createGain();
+                g.gain.value = gainVal;
+                osc.connect(g); g.connect(master);
+                osc.start(t); osc.stop(t + dur + 0.05);
+            }
+
+            // Fundamental + harmonics layered for richness
+            makePitch(158, 'sine',     0.7);   // fundamental
+            makePitch(316, 'sine',     0.25);  // 2nd harmonic
+            makePitch(474, 'sine',     0.12);  // 3rd harmonic
+            makePitch(632, 'triangle', 0.06);  // 4th — adds warmth
+            makePitch(790, 'sine',     0.04);  // 5th — nasal colour
+
+            // Formant filter 1 — low chest resonance (~300 Hz)
+            const f1 = mooCtx.createBiquadFilter();
+            f1.type = 'bandpass';
+            f1.frequency.setValueAtTime(300, t);
+            f1.frequency.linearRampToValueAtTime(260, t + dur);
+            f1.Q.value = 3;
+
+            // Formant filter 2 — mid nasal resonance (~900 Hz)
+            const f2 = mooCtx.createBiquadFilter();
+            f2.type = 'bandpass';
+            f2.frequency.setValueAtTime(850, t);
+            f2.frequency.linearRampToValueAtTime(750, t + dur);
+            f2.Q.value = 5;
+
+            // Mix through filters back into master
+            const fMix = mooCtx.createGain();
+            fMix.gain.value = 0.6;
+            master.connect(f1); f1.connect(fMix);
+            master.connect(f2); f2.connect(fMix);
+            fMix.connect(mooCtx.destination);
+
+            // Vibrato LFO — slow, wide, very cow-like
+            const lfo = mooCtx.createOscillator();
+            lfo.frequency.setValueAtTime(3.5, t);
+            lfo.frequency.linearRampToValueAtTime(5.5, t + 0.6); // vibrato speeds up mid-moo
+            const lfoDepth = mooCtx.createGain();
+            lfoDepth.gain.setValueAtTime(0, t);
+            lfoDepth.gain.linearRampToValueAtTime(10, t + 0.5);  // vibrato kicks in after onset
+            lfo.connect(lfoDepth);
+            // Connect LFO to all oscillators' frequencies via master gain trick isn't possible,
+            // so we just modulate an extra osc that blends in
+            const vibratoOsc = mooCtx.createOscillator();
+            vibratoOsc.type = 'sine';
+            vibratoOsc.frequency.setValueAtTime(158, t);
+            vibratoOsc.frequency.linearRampToValueAtTime(158 * 0.78, t + dur);
+            lfoDepth.connect(vibratoOsc.frequency);
+            const vibGain = mooCtx.createGain();
+            vibGain.gain.value = 0.18;
+            vibratoOsc.connect(vibGain); vibGain.connect(master);
+            vibratoOsc.start(t); vibratoOsc.stop(t + dur + 0.05);
+            lfo.start(t); lfo.stop(t + dur + 0.05);
+
+            // Soft noise floor for breath/air texture
+            const noiseBuffer = mooCtx.createBuffer(1, mooCtx.sampleRate * dur, mooCtx.sampleRate);
+            const nd = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1);
+            const noise = mooCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+            const noiseFilter = mooCtx.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.value = 400;
+            const noiseGain = mooCtx.createGain();
+            noiseGain.gain.setValueAtTime(0, t);
+            noiseGain.gain.linearRampToValueAtTime(0.025, t + 0.2);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+            noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(master);
+            noise.start(t);
+
+            // --- SLOW FADE: freeze flicker then fade out ---
+            flame.style.animation = 'none';
+            setTimeout(() => flame.classList.add('extinguished'), 80);
         });
 
         // Replay button
